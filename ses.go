@@ -44,11 +44,7 @@ func messagetoSESInput(m *Message) *ses.SendEmailInput {
 		Source:      &m.From,
 		Destination: &ses.Destination{ToAddresses: slicetoPtrSlice(m.To)},
 		Message: &ses.Message{
-			Subject: &ses.Content{},
-			Body: &ses.Body{
-				Text: &ses.Content{},
-				Html: &ses.Content{},
-			},
+			Body: &ses.Body{},
 		},
 	}
 	if len(m.Cc) > 0 {

@@ -2,6 +2,7 @@ package email_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -89,32 +90,22 @@ func TestSendValidationErrors(t *testing.T) {
 func TestMessageSend(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name              string
-		opts              []func(*email.Message)
-		expFrom           *string
-		expTo             []*string
-		expCc             []*string
-		expBcc            []*string
-		expSubject        *string
-		expSubjectCharset *string
-		expTBody          *string
-		expTBodyCharset   *string
-		expHBody          *string
-		expHBodyCharset   *string
+		name string
+		opts []func(*email.Message)
+		exp  *ses.SendEmailInput
 	}{
 		{
-			name:              "minimal",
-			opts:              []func(*email.Message){email.From(from), email.To(to1, to2)},
-			expFrom:           &from,
-			expTo:             []*string{&to1, &to2},
-			expCc:             nil,
-			expBcc:            nil,
-			expSubject:        nil,
-			expSubjectCharset: nil,
-			expTBody:          nil,
-			expTBodyCharset:   nil,
-			expHBody:          nil,
-			expHBodyCharset:   nil,
+			name: "minimal",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses: []*string{&to1, &to2},
+				},
+				Message: &ses.Message{
+					Body: &ses.Body{},
+				},
+			},
 		},
 		{
 			name: "everything",
@@ -127,16 +118,30 @@ func TestMessageSend(t *testing.T) {
 				email.TextBody(tBody),
 				email.HtmlBody(hBody),
 			},
-			expFrom:           &from,
-			expTo:             []*string{&to1, &to2},
-			expCc:             []*string{&cc1, &cc2},
-			expBcc:            []*string{&bcc1, &bcc2},
-			expSubject:        &subject,
-			expSubjectCharset: &charSet,
-			expTBody:          &tBody,
-			expTBodyCharset:   &charSet,
-			expHBody:          &hBody,
-			expHBodyCharset:   &charSet,
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses:  []*string{&to1, &to2},
+					CcAddresses:  []*string{&cc1, &cc2},
+					BccAddresses: []*string{&bcc1, &bcc2},
+				},
+				Message: &ses.Message{
+					Subject: &ses.Content{
+						Data:    &subject,
+						Charset: &charSet,
+					},
+					Body: &ses.Body{
+						Text: &ses.Content{
+							Data:    &tBody,
+							Charset: &charSet,
+						},
+						Html: &ses.Content{
+							Data:    &hBody,
+							Charset: &charSet,
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -152,17 +157,8 @@ func TestMessageSend(t *testing.T) {
 			})
 			m := email.NewWithSender(s, test.opts...)
 			err := m.Send()
-			is.NoErr(err)                                                    // expected no error
-			is.Equal(test.expFrom, pInput.Source)                            // expected different source in the input
-			is.Equal(test.expTo, pInput.Destination.ToAddresses)             // expected different to addresses slice in the input
-			is.Equal(test.expCc, pInput.Destination.CcAddresses)             // expected different cc addresses slice in the input
-			is.Equal(test.expBcc, pInput.Destination.BccAddresses)           // expected different bcc addresses slice in the input
-			is.Equal(test.expSubject, pInput.Message.Subject.Data)           // expected different Subject in the input
-			is.Equal(test.expSubjectCharset, pInput.Message.Subject.Charset) // expected different Subject Charset in the input
-			is.Equal(test.expTBody, pInput.Message.Body.Text.Data)           // expected different Text Body in the input
-			is.Equal(test.expTBodyCharset, pInput.Message.Body.Text.Charset) // expected different Text Body Charset in the input
-			is.Equal(test.expHBody, pInput.Message.Body.Html.Data)           // expected different Html Body in the input
-			is.Equal(test.expHBodyCharset, pInput.Message.Body.Html.Charset) // expected different Html Body Charset in the input
+			is.NoErr(err)                                // // expected no error
+			is.True(reflect.DeepEqual(pInput, test.exp)) // expected correctly formed input
 		})
 	}
 }
