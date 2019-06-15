@@ -8,7 +8,7 @@ I find myself rewriting the same AWS SES code whenever I need to send an email f
 
 ## Prerequisites
 
-This package assumest that AWS SES service is correctly configured and that the environment variables needed to properly configure an AWS session are set. More about AWS SES requirements here: https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#SES.SendEmail
+This package assumes that AWS SES service is correctly configured and that the environment variables needed to properly configure an AWS session are set. More about AWS SES requirements here: https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#SES.SendEmail
 
 ## How to use
 
@@ -26,7 +26,7 @@ err := email.New(
 ).Send()
 ```
 
-Alternatively it is also possible to set the fields of the `Message` struct by hand, but it should be still created using the New initializer, since it attaches a sender to the struct.
+Alternatively it is also possible to set the fields of the `Message` struct by hand, but the struct itself should still be initialized using the `New` initializer, since it attaches a Sender to the struct.
 
 ```go
 msg := email.New()
