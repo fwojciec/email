@@ -108,6 +108,87 @@ func TestMessageSend(t *testing.T) {
 			},
 		},
 		{
+			name: "minimal + cc",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2), email.Cc(cc1, cc2)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses: []*string{&to1, &to2},
+					CcAddresses: []*string{&cc1, &cc2},
+				},
+				Message: &ses.Message{
+					Body: &ses.Body{},
+				},
+			},
+		},
+		{
+			name: "minimal + bcc",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2), email.Bcc(bcc1, bcc2)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses:  []*string{&to1, &to2},
+					BccAddresses: []*string{&bcc1, &bcc2},
+				},
+				Message: &ses.Message{
+					Body: &ses.Body{},
+				},
+			},
+		},
+		{
+			name: "minimal + subject",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2), email.Subject(subject)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses: []*string{&to1, &to2},
+				},
+				Message: &ses.Message{
+					Subject: &ses.Content{
+						Data:    &subject,
+						Charset: &charSet,
+					},
+					Body: &ses.Body{},
+				},
+			},
+		},
+		{
+			name: "minimal + text body",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2), email.TextBody(tBody)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses: []*string{&to1, &to2},
+				},
+				Message: &ses.Message{
+					Body: &ses.Body{
+						Text: &ses.Content{
+							Data:    &tBody,
+							Charset: &charSet,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "minimal + html body",
+			opts: []func(*email.Message){email.From(from), email.To(to1, to2), email.HtmlBody(hBody)},
+			exp: &ses.SendEmailInput{
+				Source: &from,
+				Destination: &ses.Destination{
+					ToAddresses: []*string{&to1, &to2},
+				},
+				Message: &ses.Message{
+					Body: &ses.Body{
+						Html: &ses.Content{
+							Data:    &hBody,
+							Charset: &charSet,
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "everything",
 			opts: []func(*email.Message){
 				email.From(from),
